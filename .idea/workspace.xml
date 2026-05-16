@@ -5,19 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="06cba303-0919-47f1-8a47-3f2c9cdcca3a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/tetris/Assets.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/tetris/Constants.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/tetris/GameWindow.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/tetris/InputHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/tetris/Main.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/tetris/Piece.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/tetris/Tetromino.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tetris/Assets.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/tetris/Assets.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/tetris/Board.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/tetris/Board.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/tetris/ImageLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/tetris/ImageLoader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/tetris/Shape.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/tetris/Title.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/tetris/WindowGame.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tetris/InputHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/tetris/InputHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tetris/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/tetris/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,18 +31,18 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "ThomasDelamort"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;ThomasDelamort&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/ThomasDelamort/Tetris-CS-DAY.git",
-    "accountId": "1e59b27a-44e4-49be-a03b-c1e52996d73f"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/ThomasDelamort/Tetris-CS-DAY.git&quot;,
+    &quot;accountId&quot;: &quot;1e59b27a-44e4-49be-a03b-c1e52996d73f&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4,
   &quot;fromUser&quot;: false
@@ -97,9 +89,22 @@
       <option name="presentableId" value="Default" />
       <updated>1775222943602</updated>
     </task>
+    <task id="LOCAL-00001" summary="Full Game Overhaul">
+      <option name="closed" value="true" />
+      <created>1778906764160</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1778906764160</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Full Game Overhaul" />
+    <option name="LAST_COMMIT_MESSAGE" value="Full Game Overhaul" />
   </component>
 </project>

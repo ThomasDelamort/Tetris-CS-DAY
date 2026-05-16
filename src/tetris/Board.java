@@ -1,356 +1,631 @@
 package tetris;
 
+import javax.swing.JPanel;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.image.BufferedImage;
-import java.io.Serial;
-import java.util.Arrays;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.util.Random;
 
-import javax.swing.JPanel;
-import javax.swing.Timer;
+public class Board extends JPanel implements Runnable {
 
-public class Board extends JPanel implements KeyListener, MouseListener, MouseMotionListener {
+    private Thread gameThread;
 
-	//Assets
-    /**
-     *
-     */
-    @Serial
-    private static final long serialVersionUID = 1L;
+    private boolean running;
 
-    private BufferedImage pause, refresh;
+    private double scale;
 
-	//board dimensions (the playing area)
-    private final int boardHeight = 20, boardWidth = 10;
+    private int xOffset;
 
-	// block size
-    public static final int blockSize = 30;
+    private int yOffset;
 
-	// field
-    private Color[][] board = new Color[boardHeight][boardWidth];
+    private final Color[][] board;
 
-	// array with all the possible shapes
-    private Shape[] shapes = new Shape[7];
+    private Piece currentPiece;
 
-	// currentShape
-    private static Shape currentShape, nextShape;
+    private final Random random;
 
-	// game loop
-    private Timer looper;
+    private long lastDropTime;
 
-    private int FPS = 60;
+    private final long dropDelay = 500;
 
-    private int delay = 1000 / FPS;
-
-	// mouse events variables
-    private int mouseX, mouseY;
-
-    private boolean leftClick = false;
-
-    private Rectangle stopBounds, refreshBounds;
-
-    private boolean gamePaused = false;
+    private int score = 0;
 
     private boolean gameOver = false;
 
-    private Color[] colors = {Color.decode("#ed1c24"), Color.decode("#ff7f27"), Color.decode("#fff200"),
-        Color.decode("#22b14c"), Color.decode("#00a2e8"), Color.decode("#a349a4"), Color.decode("#3f48cc")};
-    private Random random = new Random();
-	// buttons press lapse
-    private Timer buttonLapse = new Timer(300, new ActionListener() {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            buttonLapse.stop();
-        }
-    });
-
-	// score
-    private int score = 0;
-
     public Board() {
 
-        pause = ImageLoader.loadImage("/pause.png");
-        refresh = ImageLoader.loadImage("/refresh.png");
+        setFocusable(true);
 
-        mouseX = 0;
-        mouseY = 0;
+        requestFocusInWindow();
 
-        stopBounds = new Rectangle(350, 500, pause.getWidth(), pause.getHeight() + pause.getHeight() / 2);
-        refreshBounds = new Rectangle(350, 500 - refresh.getHeight() - 20, refresh.getWidth(),
-                refresh.getHeight() + refresh.getHeight() / 2);
+        setDoubleBuffered(true);
 
-		// create game looper
-        looper = new Timer(delay, new GameLooper());
+        setBackground(Color.BLACK);
 
-		// create shapes
-        shapes[0] = new Shape(new int[][]{
-            {1, 1, 1, 1} // I shape;
-        }, this, colors[0]);
+        setPreferredSize(
+                new Dimension(
+                        Constants.BASE_WIDTH,
+                        Constants.BASE_HEIGHT
+                )
+        );
 
-        shapes[1] = new Shape(new int[][]{
-            {1, 1, 1},
-            {0, 1, 0}, // T shape;
-        }, this, colors[1]);
+        board = new Color[
+                Constants.BOARD_HEIGHT
+                ][
+                Constants.BOARD_WIDTH
+                ];
 
-        shapes[2] = new Shape(new int[][]{
-            {1, 1, 1},
-            {1, 0, 0}, // L shape;
-        }, this, colors[2]);
+        random = new Random();
 
-        shapes[3] = new Shape(new int[][]{
-            {1, 1, 1},
-            {0, 0, 1}, // J shape;
-        }, this, colors[3]);
+        addKeyListener(new InputHandler(this));
 
-        shapes[4] = new Shape(new int[][]{
-            {0, 1, 1},
-            {1, 1, 0}, // S shape;
-        }, this, colors[4]);
+        spawnPiece();
+    }
 
-        shapes[5] = new Shape(new int[][]{
-            {1, 1, 0},
-            {0, 1, 1}, // Z shape;
-        }, this, colors[5]);
+    public void startGame() {
 
-        shapes[6] = new Shape(new int[][]{
-            {1, 1},
-            {1, 1}, // O shape;
-        }, this, colors[6]);
+        running = true;
 
+        gameThread = new Thread(this);
+
+        gameThread.start();
+    }
+
+    @Override
+    public void run() {
+
+        long lastTime = System.nanoTime();
+
+        double ns =
+                1000000000.0 / Constants.FPS;
+
+        double delta = 0;
+
+        while (running) {
+
+            long now = System.nanoTime();
+
+            delta += (now - lastTime) / ns;
+
+            lastTime = now;
+
+            while (delta >= 1) {
+
+                update();
+
+                repaint();
+
+                delta--;
+            }
+        }
     }
 
     private void update() {
-        if (stopBounds.contains(mouseX, mouseY) && leftClick && !buttonLapse.isRunning() && !gameOver) {
-            buttonLapse.start();
-            gamePaused = !gamePaused;
-        }
 
-        if (refreshBounds.contains(mouseX, mouseY) && leftClick) {
-            startGame();
-        }
-
-        if (gamePaused || gameOver) {
+        if (gameOver) {
             return;
         }
-        currentShape.update();
+
+        if (System.currentTimeMillis()
+                - lastDropTime > dropDelay) {
+
+            movePiece(0, 1);
+
+            lastDropTime =
+                    System.currentTimeMillis();
+        }
     }
 
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
+    private void spawnPiece() {
 
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());
+        Tetromino[] values =
+                Tetromino.values();
 
-        for (int row = 0; row < board.length; row++) {
-            for (int col = 0; col < board[row].length; col++) {
+        currentPiece = new Piece(
+                values[random.nextInt(values.length)]
+        );
 
-                if (board[row][col] != null) {
-                    g.setColor(board[row][col]);
-                    g.fillRect(col * blockSize, row * blockSize, blockSize, blockSize);
-                }
+        if (!canMove(
+                currentPiece.x,
+                currentPiece.y,
+                currentPiece.shape
+        )) {
 
-            }
+            gameOver = true;
         }
-        g.setColor(nextShape.getColor());
-        for (int row = 0; row < nextShape.getCoords().length; row++) {
-            for (int col = 0; col < nextShape.getCoords()[0].length; col++) {
-                if (nextShape.getCoords()[row][col] != 0) {
-                    g.fillRect(col * 30 + 320, row * 30 + 50, Board.blockSize, Board.blockSize);
-                }
-            }
-        }
-        currentShape.render(g);
+    }
 
-        if (stopBounds.contains(mouseX, mouseY)) {
-            g.drawImage(pause.getScaledInstance(pause.getWidth() + 3, pause.getHeight() + 3, BufferedImage.SCALE_DEFAULT), stopBounds.x + 3, stopBounds.y + 3, null);
-        } else {
-            g.drawImage(pause, stopBounds.x, stopBounds.y, null);
-        }
+    public void movePiece(int dx, int dy) {
 
-        if (refreshBounds.contains(mouseX, mouseY)) {
-            g.drawImage(refresh.getScaledInstance(refresh.getWidth() + 3, refresh.getHeight() + 3,
-                    BufferedImage.SCALE_DEFAULT), refreshBounds.x + 3, refreshBounds.y + 3, null);
-        } else {
-            g.drawImage(refresh, refreshBounds.x, refreshBounds.y, null);
-        }
-
-        if (gamePaused) {
-            String gamePausedString = "GAME PAUSED";
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Georgia", Font.BOLD, 30));
-            g.drawString(gamePausedString, 35, WindowGame.HEIGHT / 2);
-        }
         if (gameOver) {
-            String gameOverString = "GAME OVER";
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Georgia", Font.BOLD, 30));
-            g.drawString(gameOverString, 50, WindowGame.HEIGHT / 2);
+            return;
         }
-        g.setColor(Color.WHITE);
 
-        g.setFont(new Font("Georgia", Font.BOLD, 20));
+        if (canMove(
+                currentPiece.x + dx,
+                currentPiece.y + dy,
+                currentPiece.shape
+        )) {
 
-        g.drawString("SCORE", WindowGame.WIDTH - 125, WindowGame.HEIGHT / 2);
-        g.drawString(score + "", WindowGame.WIDTH - 125, WindowGame.HEIGHT / 2 + 30);
+            currentPiece.x += dx;
 
-        g.setColor(Color.WHITE);
+            currentPiece.y += dy;
 
-        for (int i = 0; i <= boardHeight; i++) {
-            g.drawLine(0, i * blockSize, boardWidth * blockSize, i * blockSize);
-        }
-        for (int j = 0; j <= boardWidth; j++) {
-            g.drawLine(j * blockSize, 0, j * blockSize, boardHeight * 30);
+        } else if (dy == 1) {
+
+            lockPiece();
+
+            clearLines();
+
+            spawnPiece();
         }
     }
 
-    public void setNextShape() {
-        int index = random.nextInt(shapes.length);
-        int colorIndex = random.nextInt(colors.length);
-        nextShape = new Shape(shapes[index].getCoords(), this, colors[colorIndex]);
+    public void rotatePiece() {
+
+        int[][] backup =
+                copyShape(currentPiece.shape);
+
+        currentPiece.rotate();
+
+        if (!canMove(
+                currentPiece.x,
+                currentPiece.y,
+                currentPiece.shape
+        )) {
+
+            currentPiece.shape = backup;
+        }
     }
 
-    public void setCurrentShape() {
-        currentShape = nextShape;
-        setNextShape();
+    public void hardDrop() {
 
-        for (int row = 0; row < currentShape.getCoords().length; row++) {
-            for (int col = 0; col < currentShape.getCoords()[0].length; col++) {
-                if (currentShape.getCoords()[row][col] != 0) {
-                    if (board[currentShape.getY() + row][currentShape.getX() + col] != null) {
-                        gameOver = true;
+        while (canMove(
+                currentPiece.x,
+                currentPiece.y + 1,
+                currentPiece.shape
+        )) {
+
+            currentPiece.y++;
+        }
+
+        lockPiece();
+
+        clearLines();
+
+        spawnPiece();
+    }
+
+    private boolean canMove(
+            int x,
+            int y,
+            int[][] shape
+    ) {
+
+        for (int row = 0;
+             row < shape.length;
+             row++) {
+
+            for (int col = 0;
+                 col < shape[row].length;
+                 col++) {
+
+                if (shape[row][col] == 0) {
+                    continue;
+                }
+
+                int newX = x + col;
+
+                int newY = y + row;
+
+                if (newX < 0
+                        || newX >= Constants.BOARD_WIDTH
+                        || newY >= Constants.BOARD_HEIGHT) {
+
+                    return false;
+                }
+
+                if (newY >= 0
+                        && board[newY][newX] != null) {
+
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void lockPiece() {
+
+        for (int row = 0;
+             row < currentPiece.shape.length;
+             row++) {
+
+            for (int col = 0;
+                 col < currentPiece.shape[row].length;
+                 col++) {
+
+                if (currentPiece.shape[row][col] != 0) {
+
+                    int boardX =
+                            currentPiece.x + col;
+
+                    int boardY =
+                            currentPiece.y + row;
+
+                    if (boardY >= 0) {
+
+                        board[boardY][boardX] =
+                                currentPiece.color;
                     }
                 }
             }
         }
-
     }
 
-    public Color[][] getBoard() {
-        return board;
-    }
+    private void clearLines() {
 
-    @Override
-    public void keyTyped(KeyEvent e) {
+        for (int row =
+             Constants.BOARD_HEIGHT - 1;
+             row >= 0;
+             row--) {
 
-    }
+            boolean full = true;
 
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_UP) {
-            currentShape.rotateShape();
-        }
-        if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            currentShape.setDeltaX(1);
-        }
-        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-            currentShape.setDeltaX(-1);
-        }
-        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            currentShape.speedUp();
-        }
+            for (int col = 0;
+                 col < Constants.BOARD_WIDTH;
+                 col++) {
 
-        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            currentShape.hardDrop();
-        }
-    }
+                if (board[row][col] == null) {
 
-    @Override
-    public void keyReleased(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            currentShape.speedDown();
-        }
-    }
+                    full = false;
 
+                    break;
+                }
+            }
 
-    public void startGame() {
-        stopGame();
-        setNextShape();
-        setCurrentShape();
-        gameOver = false;
-        looper.start();
+            if (full) {
 
-    }
+                removeLine(row);
 
-    public void stopGame() {
-        score = 0;
+                score += 100;
 
-        for (Color[] value : board) {
-            Arrays.fill(value, null);
-        }
-        looper.stop();
-    }
-
-    class GameLooper implements ActionListener {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            update();
-            repaint();
-        }
-
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        mouseX = e.getX();
-        mouseY = e.getY();
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        mouseX = e.getX();
-        mouseY = e.getY();
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {}
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            leftClick = true;
-        }
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            leftClick = false;
-        }
-    }
-
-    private void hardDrop() {
-        while (true) {
-            int oldY = currentShape.getY();
-
-            currentShape.update();
-
-            // If it didn't move down anymore, stop
-            if (currentShape.getY() == oldY) {
-                break;
+                row++;
             }
         }
     }
 
-    @Override
-    public void mouseEntered(MouseEvent e) {}
+    private void removeLine(int line) {
 
-    @Override
-    public void mouseExited(MouseEvent e) {}
+        for (int row = line;
+             row > 0;
+             row--) {
 
-    public void addScore() {
-        score++;
+            for (int col = 0;
+                 col < Constants.BOARD_WIDTH;
+                 col++) {
+
+                board[row][col] =
+                        board[row - 1][col];
+            }
+        }
+
+        for (int col = 0;
+             col < Constants.BOARD_WIDTH;
+             col++) {
+
+            board[0][col] = null;
+        }
     }
 
+    private int[][] copyShape(int[][] original) {
+
+        int[][] copy =
+                new int[
+                        original.length
+                        ][
+                        original[0].length
+                        ];
+
+        for (int row = 0;
+             row < original.length;
+             row++) {
+
+            for (int col = 0;
+                 col < original[row].length;
+                 col++) {
+
+                copy[row][col] =
+                        original[row][col];
+            }
+        }
+
+        return copy;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+
+        super.paintComponent(g);
+
+        Graphics2D g2d = (Graphics2D) g;
+
+        g2d.setRenderingHint(
+                RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON
+        );
+
+        scale = Math.min(
+                getWidth()
+                        / (double) Constants.BASE_WIDTH,
+
+                getHeight()
+                        / (double) Constants.BASE_HEIGHT
+        );
+
+        xOffset = (int)
+                ((getWidth()
+                        - Constants.BASE_WIDTH * scale) / 2);
+
+        yOffset = (int)
+                ((getHeight()
+                        - Constants.BASE_HEIGHT * scale) / 2);
+
+        g2d.translate(xOffset, yOffset);
+
+        g2d.scale(scale, scale);
+
+        drawBoard(g2d);
+
+        drawPlacedBlocks(g2d);
+
+        drawCurrentPiece(g2d);
+
+        drawGrid(g2d);
+
+        drawUI(g2d);
+    }
+
+    private void drawBoard(Graphics2D g2d) {
+
+        int boardWidth =
+                Constants.BOARD_WIDTH
+                        * Constants.TILE_SIZE;
+
+        int boardHeight =
+                Constants.BOARD_HEIGHT
+                        * Constants.TILE_SIZE;
+
+        int boardX =
+                (Constants.BASE_WIDTH - boardWidth) / 2;
+
+        int boardY =
+                (Constants.BASE_HEIGHT - boardHeight) / 2;
+
+        g2d.setColor(Color.DARK_GRAY);
+
+        g2d.fillRect(
+                boardX,
+                boardY,
+                boardWidth,
+                boardHeight
+        );
+    }
+
+    private void drawGrid(Graphics2D g2d) {
+
+        int boardWidth =
+                Constants.BOARD_WIDTH
+                        * Constants.TILE_SIZE;
+
+        int boardHeight =
+                Constants.BOARD_HEIGHT
+                        * Constants.TILE_SIZE;
+
+        int startX =
+                (Constants.BASE_WIDTH - boardWidth) / 2;
+
+        int startY =
+                (Constants.BASE_HEIGHT - boardHeight) / 2;
+
+        g2d.setColor(Color.GRAY);
+
+        for (int row = 0;
+             row <= Constants.BOARD_HEIGHT;
+             row++) {
+
+            g2d.drawLine(
+                    startX,
+                    startY + row * Constants.TILE_SIZE,
+                    startX + boardWidth,
+                    startY + row * Constants.TILE_SIZE
+            );
+        }
+
+        for (int col = 0;
+             col <= Constants.BOARD_WIDTH;
+             col++) {
+
+            g2d.drawLine(
+                    startX + col * Constants.TILE_SIZE,
+                    startY,
+                    startX + col * Constants.TILE_SIZE,
+                    startY + boardHeight
+            );
+        }
+    }
+
+    private void drawPlacedBlocks(Graphics2D g2d) {
+
+        int boardWidth =
+                Constants.BOARD_WIDTH
+                        * Constants.TILE_SIZE;
+
+        int boardHeight =
+                Constants.BOARD_HEIGHT
+                        * Constants.TILE_SIZE;
+
+        int startX =
+                (Constants.BASE_WIDTH - boardWidth) / 2;
+
+        int startY =
+                (Constants.BASE_HEIGHT - boardHeight) / 2;
+
+        for (int row = 0;
+             row < Constants.BOARD_HEIGHT;
+             row++) {
+
+            for (int col = 0;
+                 col < Constants.BOARD_WIDTH;
+                 col++) {
+
+                if (board[row][col] != null) {
+
+                    g2d.setColor(board[row][col]);
+
+                    g2d.fillRect(
+                            startX
+                                    + col * Constants.TILE_SIZE,
+
+                            startY
+                                    + row * Constants.TILE_SIZE,
+
+                            Constants.TILE_SIZE,
+                            Constants.TILE_SIZE
+                    );
+                }
+            }
+        }
+    }
+
+    private void drawCurrentPiece(Graphics2D g2d) {
+
+        int boardWidth =
+                Constants.BOARD_WIDTH
+                        * Constants.TILE_SIZE;
+
+        int boardHeight =
+                Constants.BOARD_HEIGHT
+                        * Constants.TILE_SIZE;
+
+        int startX =
+                (Constants.BASE_WIDTH - boardWidth) / 2;
+
+        int startY =
+                (Constants.BASE_HEIGHT - boardHeight) / 2;
+
+        g2d.setColor(currentPiece.color);
+
+        for (int row = 0;
+             row < currentPiece.shape.length;
+             row++) {
+
+            for (int col = 0;
+                 col < currentPiece.shape[row].length;
+                 col++) {
+
+                if (currentPiece.shape[row][col] != 0) {
+
+                    g2d.fillRect(
+                            startX
+                                    + (currentPiece.x + col)
+                                    * Constants.TILE_SIZE,
+
+                            startY
+                                    + (currentPiece.y + row)
+                                    * Constants.TILE_SIZE,
+
+                            Constants.TILE_SIZE,
+                            Constants.TILE_SIZE
+                    );
+                }
+            }
+        }
+    }
+
+    private void drawUI(Graphics2D g2d) {
+
+        g2d.setColor(Color.WHITE);
+
+        g2d.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        40
+                )
+        );
+
+        g2d.drawString(
+                "TETRIS",
+                60,
+                80
+        );
+
+        g2d.setFont(
+                new Font(
+                        "Arial",
+                        Font.PLAIN,
+                        28
+                )
+        );
+
+        g2d.drawString(
+                "Score: " + score,
+                60,
+                150
+        );
+
+        g2d.drawString(
+                "LEFT / RIGHT = Move",
+                60,
+                240
+        );
+
+        g2d.drawString(
+                "UP = Rotate",
+                60,
+                290
+        );
+
+        g2d.drawString(
+                "DOWN = Soft Drop",
+                60,
+                340
+        );
+
+        g2d.drawString(
+                "SPACE = Hard Drop",
+                60,
+                390
+        );
+
+        g2d.drawString(
+                "ESC = Exit",
+                60,
+                440
+        );
+
+        if (gameOver) {
+
+            g2d.setColor(Color.RED);
+
+            g2d.setFont(
+                    new Font(
+                            "Arial",
+                            Font.BOLD,
+                            64
+                    )
+            );
+
+            g2d.drawString(
+                    "GAME OVER",
+                    420,
+                    350
+            );
+        }
+    }
 }

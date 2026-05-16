@@ -4,7 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="06cba303-0919-47f1-8a47-3f2c9cdcca3a" name="Changes" comment="" />
+    <list default="true" id="06cba303-0919-47f1-8a47-3f2c9cdcca3a" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/tetris/Assets.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tetris/Constants.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tetris/GameWindow.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tetris/InputHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tetris/Main.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tetris/Piece.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tetris/Tetromino.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tetris/Board.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/tetris/Board.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tetris/ImageLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/tetris/ImageLoader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tetris/Shape.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tetris/Title.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tetris/WindowGame.java" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -18,8 +32,25 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "ThomasDelamort"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/ThomasDelamort/Tetris-CS-DAY.git",
+    "accountId": "1e59b27a-44e4-49be-a03b-c1e52996d73f"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4,
   &quot;fromUser&quot;: false
@@ -31,13 +62,14 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.Main.executor": "Run",
     "Application.WindowGame.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "FullScreenUpdate",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Tetris/Tetris/data",

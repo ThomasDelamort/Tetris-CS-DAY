@@ -1,21 +1,24 @@
-package tetris;
+package tetris.util;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 public class ImageLoader {
 
-    public static BufferedImage loadImage(String path) {
+    public static BufferedImage load(String path) {
+
         try {
-            return ImageIO.read(new File("data" + path));
+
+            return ImageIO.read(
+                    ImageLoader.class.getResourceAsStream(path)
+            );
 
         } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        return null;
 
+            throw new RuntimeException(
+                    "Failed to load image: " + path
+            );
+        }
     }
 }

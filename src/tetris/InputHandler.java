@@ -47,6 +47,30 @@ public class InputHandler extends KeyAdapter {
 
                 break;
 
+            case KeyEvent.VK_C:
+
+                board.holdPiece();
+
+                break;
+
+            case KeyEvent.VK_ENTER:
+
+                board.startPlaying();
+
+                break;
+
+            case KeyEvent.VK_P:
+
+                board.togglePause();
+
+                break;
+
+            case KeyEvent.VK_R:
+
+                board.restartGame();
+
+                break;
+
             case KeyEvent.VK_ESCAPE:
 
                 System.exit(0);

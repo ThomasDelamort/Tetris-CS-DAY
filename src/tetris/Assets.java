@@ -3,6 +3,7 @@ package tetris;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Objects;
 
 public class Assets {
 
@@ -13,9 +14,9 @@ public class Assets {
         try {
 
             background = ImageIO.read(
-                    Assets.class.getResourceAsStream(
+                    Objects.requireNonNull(Assets.class.getResourceAsStream(
                             "/images/background.png"
-                    )
+                    ))
             );
 
         } catch (IOException e) {
